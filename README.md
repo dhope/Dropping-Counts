@@ -8,17 +8,7 @@ The work was also included in my [MSc thesis](http://summit.sfu.ca/system/files/
 
 From the publication, here is the result I found:
 
-> There was a trend for adults to have slightly higher
->
-> dropping intensity closer to shore, but the distribution of
->
-> proportion of droppings/m 2 /min did not differ significantly
->
-> between adults and juveniles in either year (Fig. 5; Kolmogo-
->
-> rov–Smirnov test (KS); 2007: D = 0.31, N = 13, P \> 0.10;
->
-> 2008: D=0.23, N=13, P\>0.20).
+> There was a trend for adults to have slightly higher dropping intensity closer to shore, but the distribution of proportion of droppings/m 2 /min did not differ significantly between adults and juveniles in either year (Fig. 5; Kolmogorov–Smirnov test (KS); 2007: D = 0.31, N = 13, P \> 0.10; 2008: D=0.23, N=13, P>0.20).
 
 This was always a bit of a weak sauce for me because I spent a lot of time counting poo out on the mudflats. We did have bigger plans for a detailed analysis, but since I only had one transect of counts and the KS test didn't find anything we decided to keep it simple.
 

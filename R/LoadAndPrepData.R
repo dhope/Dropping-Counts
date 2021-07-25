@@ -58,7 +58,7 @@ stan_dat <-
     D_doy = D_doy,
     D_d2s = D_d2s
   )
-
+write_rds(stan_dat, here::here("output/rds/stan_dat.rds"))
 library(cmdstanr)
 m <- cmdstanr::cmdstan_model("stan/testMod.stan")
 fit <- m$sample(data = stan_dat, chains = 1, iter_sampling = 1000, iter_warmup = 1000)
@@ -82,12 +82,13 @@ sum_ary %>% filter(grepl("X2", variable)) %>%
 
 
 m3 <- cmdstanr::cmdstan_model("stan/testPoisson_AgeYear.stan")
-fit <- m3$sample(data = stan_dat, parallel_chains = 3,chains = 3,
-                 iter_sampling = 1000,
+fit <- m3$sample(data = stan_dat, parallel_chains = 8,chains = 8,
+                 iter_sampling = 2000,
                  iter_warmup = 1000)
-
-s3 <- fit$summary()
-
+fit$save_object("/mnt/Storage/LargeRFiles/Dropping-Counts/testPoisson_AgeYear_4gp.rds")
+fit <- read_rds("/mnt/Storage/LargeRFiles/Dropping-Counts/testPoisson_AgeYear.rds")
+ s3 <- fit$summary()
+write_rds(s3, here::here("output/rds/testmodel_vars2.rds"))
 s3 %>% filter(grepl("X2", variable)) %>%
   separate(variable, into = c("Var", "group", "D2S", "ex"),
            sep = "\\[|\\]|\\,", remove = F, convert = T) %>%
@@ -99,9 +100,9 @@ s3 %>% filter(grepl("X2", variable)) %>%
 
 
 s3 %>% filter(grepl("X1", variable)) %>%
-  separate(variable, into = c("Var", "DOY", "ex"),
-           sep = "\\[|\\]", remove = F, convert = T) %>%
-  ggplot(aes(DOY, mean)) +
+  separate(variable, into = c("Var", "year","DOY", "ex"),
+           sep = "\\[|\\]|\\,", remove = F, convert = T) %>%
+  ggplot(aes(DOY, mean, colour = factor(year))) +
   geom_ribbon(aes(ymin = q5, ymax = q95), alpha = 0.2)+
   geom_line()
 s3 %>% filter(grepl("alpha", variable)) %>%

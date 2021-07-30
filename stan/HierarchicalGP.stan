@@ -2,7 +2,7 @@ data {
   int n_doy;
   int n_year;
   int n_d2s;
-  int n_groups
+  int n_groups; // Number of groups (4)
   int<lower=0> n; // Number of rows
   int d2s[n]; // Distance to shore
   int doy[n]; // Day of Year
@@ -15,40 +15,41 @@ data {
 
 }
 
-transformed data {
-  real years[N_years];
-  vector[16] counts;
-  int n_comps;
-  for (t in 1:N_years)
-    years[t] = t;
-  n_comps = rows(counts);
-  for (i in 1:n_comps)
-    counts[i] = 2;
-}
+// transformed data {
+//   real years[N_years];
+//   vector[16] counts;
+//   int n_comps;
+//   for (t in 1:N_years)
+//     years[t] = t;
+//   n_comps = rows(counts);
+//   for (i in 1:n_comps)
+//     counts[i] = 2;
+// }
 parameters {
   matrix[n_d2s,n_groups] GP_d2s_group_std;
   // matrix[N_years,N_states] GP_state_std;
   vector[n_d2s] d2s_std;
   vector[n_groups] group_std;
 
-  vector[N_regions] region_std;
+  // vector[N_regions] region_std;
 
   /// Not sure what these are for yet
-  real<lower=0> tot_var;
-  simplex[n_comps] prop_var;
-  real mu;
-  real<lower=0> nu;
-
-
-  real<lower=0> length_GP_region_long;
-  real<lower=0> length_GP_state_long;
-  real<lower=0> length_GP_region_short;
-  real<lower=0> length_GP_state_short;
+  // real<lower=0> tot_var;
+  // simplex[n_comps] prop_var;
+  // real mu;
+  // real<lower=0> nu;
+  //
+  //
+  // real<lower=0> length_GP_region_long;
+  // real<lower=0> length_GP_state_long;
+  // real<lower=0> length_GP_region_short;
+  // real<lower=0> length_GP_state_short;
 }
 transformed parameters {
   matrix[n_d2s,n_groups] GP_d2s_group;
   // matrix[N_years,N_states] GP_state;
   vector[n_d2s] d2s_re;
+  vector[n_groups] groups_re;
 
   // vector[N_states] state_re;
   // vector[N_regions] region_re;
@@ -56,23 +57,23 @@ transformed parameters {
 
   vector[n_comps] vars;
 
-  real sigma_year;
-  real sigma_region;
-  vector[10] sigma_state;
-  real sigma_GP_region_long;
-  real sigma_GP_state_long;
-  real sigma_GP_region_short;
-  real sigma_GP_state_short;
+  real sigma_d2s;
+  // real sigma_region;
+  vector[4] sigma_group;
+  // real sigma_GP_region_long;
+  // real sigma_GP_state_long;
+  // real sigma_GP_region_short;
+  // real sigma_GP_state_short;
   vars = n_comps * prop_var * tot_var;
   sigma_year = sqrt(vars[1]);
   sigma_region = sqrt(vars[2]);
   for (i in 1:10)
     sigma_state[i] = sqrt(vars[i + 2]);
 
-  sigma_GP_region_long = sqrt(vars[13]);
-  sigma_GP_state_long = sqrt(vars[14]);
-  sigma_GP_region_short = sqrt(vars[15]);
-  sigma_GP_state_short = sqrt(vars[n_comps]);
+  // sigma_GP_region_long = sqrt(vars[13]);
+  // sigma_GP_state_long = sqrt(vars[14]);
+  // sigma_GP_region_short = sqrt(vars[15]);
+  // sigma_GP_state_short = sqrt(vars[n_comps]);
   region_re = sigma_region * region_std;
   year_re = sigma_year * year_std;
   state_re = sigma_state[state_region_ind] .* state_std;
@@ -118,10 +119,33 @@ model {
   tot_var ~ gamma(3, 3);
   nu ~ gamma(5, 0.01);
   prop_var ~ dirichlet(counts);
-  length_GP_region_long ~ weibull(30,8);
-  length_GP_state_long ~ weibull(30,8);
-  length_GP_region_short ~ weibull(30,3);
-  length_GP_state_short ~ weibull(30,3);
+  // length_GP_region_long ~ weibull(30,8);
+  // length_GP_state_long ~ weibull(30,8);
+  // length_GP_region_short ~ weibull(30,3);
+  // length_GP_state_short ~ weibull(30,3);
+  for (i in 1:n){
+      lambda[n] = alpha + d2s_re[d2s[i]] + exposure[i]
+      + groups_re[gr[i]]
+      + GP_doy[doy[i]]
+      + GP_d2s_group[d2s[i], gr[i]];
+  }
+  to_vector(GP_d2s_group_std) ~ normal(0,1);
+  d2s_std ~ normal(0,1);
+  group_std ~ normal(0,1);
+  DC ~ poisson_log(lambda);
+
+
+
+     alpha ~ normal(0, .1);
+    X ~ normal(0, 0.1);
+    rhosq ~ exponential( 0.5 );
+    etasq ~ exponential( 2 );
+    for(i in 1:4) z_d2s[i] ~ normal( 0 , 1 );
+    z_doy ~ normal( 0 , 1 );
+
+   target +=  poisson_log_lpmf(DC | lambda);
+
+
 }
 generated quantities {
   matrix[N_years,N_states] y_new;

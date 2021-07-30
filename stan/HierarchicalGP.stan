@@ -70,10 +70,10 @@ transformed parameters {
   for (i in 1:10)
     sigma_state[i] = sqrt(vars[i + 2]);
 
-  // sigma_GP_region_long = sqrt(vars[13]);
+  sigma_GP_region_long = sqrt(vars[13]);
   // sigma_GP_state_long = sqrt(vars[14]);
   // sigma_GP_region_short = sqrt(vars[15]);
-  // sigma_GP_state_short = sqrt(vars[n_comps]);
+  sigma_GP_state_short = sqrt(vars[n_comps]);
   region_re = sigma_region * region_std;
   year_re = sigma_year * year_std;
   state_re = sigma_state[state_region_ind] .* state_std;
@@ -86,10 +86,10 @@ transformed parameters {
     // length_GP_region_long)
     // + cov_exp_quad(years, sigma_GP_region_short,
     // length_GP_region_short);
-    cov_group_d2s = cov_exp_quad(d2s_i, sigma_GP_state_long,
-    length_GP_state_long)
-    + cov_exp_quad(d2s_i, sigma_GP_state_short,
-    length_GP_state_short);
+    cov_group_d2s = cov_exp_quad(d2s_i, sigma_GP_group_long,
+    length_GP_group_long)
+    + cov_exp_quad(d2s_i, sigma_GP_group_short,
+    length_GP_group_short);
     for (g in 1:n_d2s) {
       // cov_region[year, year] = cov_region[year, year] + 1e-12;
       cov_group_d2s[g, g] = cov_group_d2s[g, g] + 1e-12;

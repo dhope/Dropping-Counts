@@ -1,0 +1,153 @@
+data {
+  int n_doy;
+  int n_year;
+  int n_d2s;
+  int n_groups
+  int<lower=0> n; // Number of rows
+  int d2s[n]; // Distance to shore
+  int doy[n]; // Day of Year
+  int year[n]; // Year
+  real exposure[n]; // Minutes of exposure
+  int DC[n]; // Counts summed by 15 quadrats
+  matrix[n_doy, n_doy] D_doy; // Distance between points in day of year
+  matrix[n_d2s, n_d2s] D_d2s;
+  int gr[n]; // Age-Year group, 1 =Adult2007;Juvenile2007;Adult2008;Juvenile2008
+
+}
+
+transformed data {
+  real years[N_years];
+  vector[16] counts;
+  int n_comps;
+  for (t in 1:N_years)
+    years[t] = t;
+  n_comps = rows(counts);
+  for (i in 1:n_comps)
+    counts[i] = 2;
+}
+parameters {
+  matrix[n_d2s,n_groups] GP_d2s_group_std;
+  // matrix[N_years,N_states] GP_state_std;
+  vector[n_d2s] d2s_std;
+  vector[n_groups] group_std;
+
+  vector[N_regions] region_std;
+
+  /// Not sure what these are for yet
+  real<lower=0> tot_var;
+  simplex[n_comps] prop_var;
+  real mu;
+  real<lower=0> nu;
+
+
+  real<lower=0> length_GP_region_long;
+  real<lower=0> length_GP_state_long;
+  real<lower=0> length_GP_region_short;
+  real<lower=0> length_GP_state_short;
+}
+transformed parameters {
+  matrix[n_d2s,n_groups] GP_d2s_group;
+  // matrix[N_years,N_states] GP_state;
+  vector[n_d2s] d2s_re;
+
+  // vector[N_states] state_re;
+  // vector[N_regions] region_re;
+
+
+  vector[n_comps] vars;
+
+  real sigma_year;
+  real sigma_region;
+  vector[10] sigma_state;
+  real sigma_GP_region_long;
+  real sigma_GP_state_long;
+  real sigma_GP_region_short;
+  real sigma_GP_state_short;
+  vars = n_comps * prop_var * tot_var;
+  sigma_year = sqrt(vars[1]);
+  sigma_region = sqrt(vars[2]);
+  for (i in 1:10)
+    sigma_state[i] = sqrt(vars[i + 2]);
+
+  sigma_GP_region_long = sqrt(vars[13]);
+  sigma_GP_state_long = sqrt(vars[14]);
+  sigma_GP_region_short = sqrt(vars[15]);
+  sigma_GP_state_short = sqrt(vars[n_comps]);
+  region_re = sigma_region * region_std;
+  year_re = sigma_year * year_std;
+  state_re = sigma_state[state_region_ind] .* state_std;
+  {
+    matrix[N_years, N_years] cov_region;
+    matrix[N_years, N_years] cov_state;
+    matrix[N_years, N_years] L_cov_region;
+    matrix[N_years, N_years] L_cov_state;
+    cov_region = cov_exp_quad(years, sigma_GP_region_long,
+    length_GP_region_long)
+    + cov_exp_quad(years, sigma_GP_region_short,
+    length_GP_region_short);
+    cov_state = cov_exp_quad(years, sigma_GP_state_long,
+    length_GP_state_long)
+    + cov_exp_quad(years, sigma_GP_state_short,
+    length_GP_state_short);
+    for (year in 1:N_years) {
+      cov_region[year, year] = cov_region[year, year] + 1e-12;
+      cov_state[year, year] = cov_state[year, year] + 1e-12;
+    }
+    L_cov_region = cholesky_decompose(cov_region);
+    L_cov_state = cholesky_decompose(cov_state);
+    GP_region = L_cov_region * GP_region_std;
+    GP_state = L_cov_state * GP_state_std;
+  }
+}
+model {
+  vector[N] obs_mu;
+  for (n in 1:N) {
+      obs_mu[n] = nu * inv_logit(mu + year_re[year_ind[n]]
+      + state_re[state_ind[n]]
+      + region_re[region_ind[n]]
+      + GP_region[year_ind[n],region_ind[n]]
+      + GP_state[year_ind[n],state_ind[n]]);
+  }
+  y ~ beta(obs_mu, (nu - obs_mu));
+  to_vector(GP_region_std) ~ normal(0, 1);
+  to_vector(GP_state_std) ~ normal(0, 1);
+  year_std ~ normal(0, 1);
+  state_std ~ normal(0, 1);
+  region_std ~ normal(0, 1);
+  mu ~ normal(0, .5);
+  tot_var ~ gamma(3, 3);
+  nu ~ gamma(5, 0.01);
+  prop_var ~ dirichlet(counts);
+  length_GP_region_long ~ weibull(30,8);
+  length_GP_state_long ~ weibull(30,8);
+  length_GP_region_short ~ weibull(30,3);
+  length_GP_state_short ~ weibull(30,3);
+}
+generated quantities {
+  matrix[N_years,N_states] y_new;
+  matrix[N_years,N_states] y_new_pred;
+  {
+    real level;
+    level = normal_rng(0.0, sigma_year);
+    for (state in 1:N_states) {
+      for (t in 1:N_years) {
+        if (t < 12) {
+          y_new[t,state] = state_re[state]
+          + region_re[state_region_ind[state]]
+          + GP_state[t,state]
+          + GP_region[t,state_region_ind[state]]
+          + mu + year_re[t];
+          } else {
+            y_new[t,state] = state_re[state]
+            + region_re[state_region_ind[state]]
+            + GP_state[t,state]
+            + GP_region[t,state_region_ind[state]]
+            + level;
+          }
+          y_new_pred[t,state] =
+          beta_rng(inv_logit(y_new[t,state]) * nu,
+          nu * (1 - inv_logit(y_new[t,state])));
+          }
+        }
+      }
+    }

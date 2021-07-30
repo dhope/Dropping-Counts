@@ -15,16 +15,16 @@ data {
 
 }
 
-// transformed data {
-//   real years[N_years];
-//   vector[16] counts;
-//   int n_comps;
-//   for (t in 1:N_years)
-//     years[t] = t;
-//   n_comps = rows(counts);
-//   for (i in 1:n_comps)
-//     counts[i] = 2;
-// }
+transformed data {
+  real d2s_i[n_d2s];
+  vector[16] counts;
+  int n_comps;
+  for (t in 1:n_d2s)
+    d2s_i[t] = t;
+  // n_comps = rows(counts);
+  // for (i in 1:n_comps)
+  //   counts[i] = 2;
+}
 parameters {
   matrix[n_d2s,n_groups] GP_d2s_group_std;
   // matrix[N_years,N_states] GP_state_std;
@@ -82,22 +82,22 @@ transformed parameters {
     matrix[N_years, N_years] cov_state;
     matrix[N_years, N_years] L_cov_region;
     matrix[N_years, N_years] L_cov_state;
-    cov_region = cov_exp_quad(years, sigma_GP_region_long,
-    length_GP_region_long)
-    + cov_exp_quad(years, sigma_GP_region_short,
-    length_GP_region_short);
-    cov_state = cov_exp_quad(years, sigma_GP_state_long,
+    // cov_region = cov_exp_quad(years, sigma_GP_region_long,
+    // length_GP_region_long)
+    // + cov_exp_quad(years, sigma_GP_region_short,
+    // length_GP_region_short);
+    cov_group_d2s = cov_exp_quad(d2s_i, sigma_GP_state_long,
     length_GP_state_long)
-    + cov_exp_quad(years, sigma_GP_state_short,
+    + cov_exp_quad(d2s_i, sigma_GP_state_short,
     length_GP_state_short);
-    for (year in 1:N_years) {
-      cov_region[year, year] = cov_region[year, year] + 1e-12;
-      cov_state[year, year] = cov_state[year, year] + 1e-12;
+    for (g in 1:n_d2s) {
+      // cov_region[year, year] = cov_region[year, year] + 1e-12;
+      cov_group_d2s[g, g] = cov_group_d2s[g, g] + 1e-12;
     }
-    L_cov_region = cholesky_decompose(cov_region);
-    L_cov_state = cholesky_decompose(cov_state);
-    GP_region = L_cov_region * GP_region_std;
-    GP_state = L_cov_state * GP_state_std;
+    // L_cov_region = cholesky_decompose(cov_region);
+    L_cov_group_d2s = cholesky_decompose(cov_group_d2s);
+    // GP_region = L_cov_region * GP_region_std;
+    GP_d2s_group = L_cov_group_d2s * GP_d2s_group_std;
   }
 }
 model {
@@ -136,14 +136,14 @@ model {
 
 
 
-     alpha ~ normal(0, .1);
-    X ~ normal(0, 0.1);
-    rhosq ~ exponential( 0.5 );
-    etasq ~ exponential( 2 );
-    for(i in 1:4) z_d2s[i] ~ normal( 0 , 1 );
-    z_doy ~ normal( 0 , 1 );
-
-   target +=  poisson_log_lpmf(DC | lambda);
+   //   alpha ~ normal(0, .1);
+   //  X ~ normal(0, 0.1);
+   //  rhosq ~ exponential( 0.5 );
+   //  etasq ~ exponential( 2 );
+   //  for(i in 1:4) z_d2s[i] ~ normal( 0 , 1 );
+   //  z_doy ~ normal( 0 , 1 );
+   //
+   // target +=  poisson_log_lpmf(DC | lambda);
 
 
 }

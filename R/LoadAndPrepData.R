@@ -56,7 +56,8 @@ stan_dat <-
     n_d2s = n_distinct(D2S),
     n_year = n_distinct(Year),
     D_doy = D_doy,
-    D_d2s = D_d2s
+    D_d2s = D_d2s,
+    n_groups = 4
   )
 write_rds(stan_dat, here::here("output/rds/stan_dat.rds"))
 library(cmdstanr)

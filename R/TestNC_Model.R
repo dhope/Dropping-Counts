@@ -2,6 +2,12 @@ stan_dat <- readr::read_rds(here::here("output/rds/stan_dat.rds"))
 
 library(cmdstanr)
 model_NC <- cmdstanr::cmdstan_model("stan/testPoisson_AgeYear_NC.stan")
+model_GP <- cmdstanr::cmdstan_model("stan/HierarchicalGP.stan")
+model_GP$sample(data = stan_dat, parallel_chains = 2,chains = 2,
+                # adapt_delta = 0.95,seed = 56465,max_treedepth = 15,
+                iter_sampling = 1000,
+                iter_warmup = 1000)
+
 fit <- model_NC$sample(data = stan_dat, parallel_chains = 8,chains = 8,
                        adapt_delta = 0.95,seed = 56465,max_treedepth = 15,
                  iter_sampling = 2000,

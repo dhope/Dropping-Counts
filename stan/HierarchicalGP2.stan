@@ -65,26 +65,28 @@ transformed parameters {
   groups_re = sigma_group * group_std;
 
   {
-    matrix[n_doy,n_doy] L_K;
-    matrix[n_doy,n_doy ] K;
-    K = gp_exp_quad_cov(doy_i,
-      sigma_doy,
-      rho);
-    L_K = cholesky_decompose(K);
-    GP_doy = L_K * eta;
+
+
   }
 
 
   {
+    matrix[n_doy,n_doy] L_K;
+    matrix[n_doy,n_doy ] K;
     matrix[n_d2s, n_d2s] cov_group_d2s;
     matrix[n_d2s, n_d2s] L_cov_group_d2s;
     cov_group_d2s = gp_exp_quad_cov(d2s_i, sigma_GP_group_long,
     length_GP_group_long);
+    K = gp_exp_quad_cov(doy_i,sigma_doy, rho);
     // + gp_exp_quad_cov(d2s_i, sigma_GP_group_short,
     // length_GP_group_short);
     // for (g in 1:n_d2s) {
     //   cov_group_d2s[g, g] = cov_group_d2s[g, g] + 1e-12;
     // }
+
+    L_K = cholesky_decompose(K);
+    GP_doy = L_K * eta;
+
     L_cov_group_d2s = cholesky_decompose(cov_group_d2s);
     GP_d2s_group = L_cov_group_d2s * GP_d2s_group_std;
   }

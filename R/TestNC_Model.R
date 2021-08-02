@@ -49,8 +49,8 @@ s3 %>% filter(grepl("alpha", variable)) %>%
 
 model_GP2 <- cmdstanr::cmdstan_model("stan/HierarchicalGP2.stan")
 fit2 <- model_GP2$sample(data = stan_dat, parallel_chains = 1,chains = 1,
-                       adapt_delta = 0.95,seed = 56465,
-                       max_treedepth = 15,
+                       # adapt_delta = 0.95,seed = 56465,
+                       # max_treedepth = 15,
                        iter_sampling = 1000,
                        iter_warmup = 1000 )
 

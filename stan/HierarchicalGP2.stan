@@ -30,7 +30,7 @@ transformed data {
 }
 parameters {
   matrix[n_d2s,n_groups] GP_d2s_group_std;
-  matrix[n_d2s,n_groups] GP_doy_std;
+  // matrix[n_d2s,n_groups] GP_doy_std;
   vector[n_d2s] d2s_std;
   vector[n_groups] group_std;
   real<lower=0> tot_var;
@@ -39,7 +39,7 @@ parameters {
 
   simplex[n_comps] prop_var;
   real<lower=0> length_GP_group_long;
-  real<lower=0> length_GP_doy_long;
+  // real<lower=0> length_GP_doy_long;
   // real<lower=0> length_GP_group_short;
   vector[n_doy] eta;
 }
@@ -63,13 +63,6 @@ transformed parameters {
   // sigma_GP_group_short = sqrt(vars[4]);
   d2s_re = sigma_d2s * d2s_std;
   groups_re = sigma_group * group_std;
-
-  {
-
-
-  }
-
-
   {
     matrix[n_doy,n_doy] L_K;
     matrix[n_doy,n_doy ] K;
@@ -99,11 +92,6 @@ transformed parameters {
       + GP_doy[doy[i]]
       + GP_d2s_group[d2s[i], gr[i]];
   }
-  // print("lambda=", lambda);
-  // print("d2s_re=", d2s_re);
-  // print("exposure=", exposure);
-  // print("groups_re=", groups_re);
-  // print("GP=", GP_d2s_group_std);
   }
 model {
 

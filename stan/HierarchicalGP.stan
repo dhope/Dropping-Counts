@@ -55,7 +55,8 @@ transformed parameters {
   {
     matrix[n_d2s, n_d2s] cov_group_d2s;
     matrix[n_d2s, n_d2s] L_cov_group_d2s;
-    cov_group_d2s = gp_exp_quad_cov(d2s_i, sigma_GP_group_long,
+    cov_group_d2s = gp_exp_quad_cov(d2s_i,
+                      sigma_GP_group_long,
     length_GP_group_long);
     // + gp_exp_quad_cov(d2s_i, sigma_GP_group_short,
     // length_GP_group_short);
